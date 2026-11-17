@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thrift Shop Browser — Kuala Lumpur</title>
+<style>
+  :root {
+    --bg: #fafaf7;
+    --card: #ffffff;
+    --text: #2b2b28;
+    --muted: #8a8a82;
+    --accent: #4f6f52;
+    --accent-soft: #eef3ee;
+    --border: #e7e7e1;
+    --price: #b45f3c;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  header { margin-bottom: 36px; }
+  header h1 { font-size: 26px; font-weight: 600; letter-spacing: 0.2px; }
+  header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  section { margin-bottom: 40px; }
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--muted);
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  /* Brand filter */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .filters button {
+    font: inherit;
+    font-size: 13px;
+    padding: 7px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filters button:hover { border-color: var(--accent); }
+  .filters button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* Item list */
+  #itemList { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+  .item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+    font: inherit;
+    width: 100%;
+  }
+  .item:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .item.selected { border-color: var(--accent); background: var(--accent-soft); }
+  .item .brand { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); font-weight: 600; }
+  .item .name { font-size: 15px; font-weight: 600; margin-top: 2px; }
+  .item .meta { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
+  .item .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px; }
+  .item .label {
+    font-size: 11px; background: var(--accent-soft); color: var(--accent);
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .item .price { font-size: 14px; font-weight: 600; color: var(--price); }
+  .empty { color: var(--muted); font-size: 14px; padding: 20px; background: var(--card); border: 1px dashed var(--border); border-radius: 12px; }
+
+  /* Detail card */
+  .detail {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    flex-wrap: wrap;
+  }
+  .photo {
+    width: 180px; height: 180px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column;
+    font-size: 34px;
+    color: #fff;
+  }
+  .photo small { font-size: 11px; opacity: 0.85; letter-spacing: 1px; text-transform: uppercase; }
+  .detail .info { flex: 1; min-width: 220px; }
+  .detail .info .brand { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--accent); font-weight: 600; }
+  .detail h3 { font-size: 19px; font-weight: 600; margin-top: 2px; }
+  .detail .price { font-size: 18px; color: var(--price); font-weight: 600; margin: 6px 0; }
+  .detail .desc { font-size: 14px; color: #55554f; margin: 8px 0; }
+  .detail .facts { font-size: 13px; color: var(--muted); margin-top: 10px; }
+  .detail .facts b { color: var(--text); font-weight: 600; }
+
+  /* Contact */
+  .contact-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .contact-box .to { font-size: 14px; margin-bottom: 12px; }
+  .contact-box .to b { font-weight: 600; }
+  #contactMsg {
+    background: var(--accent-soft);
+    border: 1px solid #d8e4d8;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    transition: all 0.2s;
+  }
+  #contactMsg.highlighted { border-color: var(--accent); background: #e3efe3; }
+  .contact-actions { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font: inherit; font-size: 14px;
+    padding: 10px 18px;
+    border: none; border-radius: 10px;
+    background: var(--accent); color: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn.secondary { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .note { font-size: 12.5px; color: var(--muted); }
+  footer { font-size: 12px; color: var(--muted); text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>Thrift Shop Browser</h1>
+    <p>Preloved finds · Bangsar, Kuala Lumpur · Sample catalogue for browsing</p>
+  </header>
+
+  <!-- 1. Browse Items -->
+  <section id="browse">
+    <h2>1 · Browse Items</h2>
+    <div class="filters" id="brandFilters"></div>
+    <div id="itemList"></div>
+  </section>
+
+  <!-- 2. Item Details -->
+  <section id="details">
+    <h2>2 · Item Details</h2>
+    <div class="detail" id="detailCard"></div>
+  </section>
+
+  <!-- 3. Quick Contact -->
+  <section id="contact">
+    <h2>3 · Quick Contact</h2>
+    <div class="contact-box">
+      <p class="to">Message for <b>Amirah's Thrift Corner</b> — reply via WhatsApp or DM. Nothing is sent or saved; just copy the text below.</p>
+      <div id="contactMsg"></div>
+      <div class="contact-actions">
+        <button class="btn" id="copyBtn">Copy message</button>
+        <button class="btn secondary" id="highlightBtn">Highlight message</button>
+        <span class="note" id="copyNote">Sample message only — no live numbers.</span>
+      </div>
+    </div>
+  </section>
+
+  <footer>All items shown are sample data for demonstration. Prices in RM, not real listings.</footer>
+</div>
+
+<script>
+// ---- Sample data (fictional, Malaysia-flavoured) ----
+const ITEMS = [
+  {
+    id: 1,
+    brand: "Nike",
+    name: "Nike Windrunner Jacket",
+    size: "M",
+    price: 45,
+    label: "Vintage 90s",
+    emoji: "🧥",
+    color: "#4f6f52",
+    condition: "Very good — light fading on cuffs",
+    desc: "Classic colour-blocked Windrunner picked up from a warehouse lot in Shah Alam. Zip works smoothly, no stains. A solid everyday layer for chilly LRT rides and mamak nights.",
+  },
+  {
+    id: 2,
+    brand: "Adidas",
+    name: "Adidas Samba OG Sneakers",
+    size: "UK 8",
+    price: 120,
+    label: "Preworn",
+    emoji: "👟",
+    color: "#3a5a8c",
+    condition: "Good — minor creasing, soles cleaned",
+    desc: "Black-and-white Sambas with the gum sole still intact. Sourced from a bundle imported via Port Klang. Laces replaced with fresh flat laces; insoles are fresh.",
+  },
+  {
+    id: 3,
+    brand: "Uniqlo",
+    name: "Uniqlo Oversized Flannel Shirt",
+    size: "L",
+    price: 25,
+    label: "Like new",
+    emoji: "👕",
+    color: "#8c5a3a",
+    condition: "Excellent — barely worn",
+    desc: "Soft brushed flannel in muted green checks. Perfect for Cameron Highlands weekends. No pilling, all buttons intact, tags removed but clearly well kept.",
+  },
+  {
+    id: 4,
+    brand: "Nike",
+    name: "Nike Tee Just Do It",
+    size: "S",
+    price: 18,
+    label: "Everyday",
+    emoji: "🎽",
+    color: "#6b4f8c",
+    condition: "Good — slight print crack",
+    desc: "White cotton tee with the classic swoosh print. Breathable and broken-in — ideal for gym sessions or casual Fridays. Fits true to size.",
+  },
+  {
+    id: 5,
+    brand: "Levi's",
+    name: "Levi's 501 Original Jeans",
+    size: "W32 L30",
+    price: 65,
+    label: "Vintage 80s",
+    emoji: "👖",
+    color: "#a8622f",
+    condition: "Good — natural fading, one repair",
+    desc: "Made-in-USA red tab 501s with honest fade lines and a small professional crotch repair. The kind of patina you can't fake. Straight fit, mid rise.",
+  },
+  {
+    id: 6,
+    brand: "Puma",
+    name: "Puma Suede Classic",
+    size: "UK 7",
+    price: 55,
+    label: "Preworn",
+    emoji: "👟",
+    color: "#7a3a52",
+    condition: "Good — suede brushed, toe scuffed",
+    desc: "Navy suede Pumas in the old-school slim shape. Suede has been brushed and treated. Slight scuff on the left toe but plenty of life left.",
+  },
+];
+
+const SHOP = { name: "Amirah's Thrift Corner", area: "Bangsar, Kuala Lumpur", hours: "11am – 8pm daily" };
+
+let selectedBrand = "All";
+let selectedItemId = ITEMS[0].id;
+
+// ---- Filtering (Feature 1) ----
+function renderFilters() {
+  const brands = ["All", ...new Set(ITEMS.map(i => i.brand))];
+  const el = document.getElementById("brandFilters");
+  el.innerHTML = "";
+  brands.forEach(b => {
+    const btn = document.createElement("button");
+    btn.textContent = b === "All" ? "All brands" : b;
+    btn.className = b === selectedBrand ? "active" : "";
+    btn.addEventListener("click", () => {
+      selectedBrand = b;
+      renderFilters();
+      renderList();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderList() {
+  const list = document.getElementById("itemList");
+  const filtered = selectedBrand === "All" ? ITEMS : ITEMS.filter(i => i.brand === selectedBrand);
+  list.innerHTML = "";
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="empty">No items for this brand right now — try another brand.</div>';
+    return;
+  }
+  filtered.forEach(item => {
+    const btn = document.createElement("button");
+    btn.className = "item" + (item.id === selectedItemId ? " selected" : "");
+    btn.innerHTML = `
+      <div class="brand">${item.brand}</div>
+      <div class="name">${item.name}</div>
+      <div class="meta">Size ${item.size} · ${item.condition.split(" — ")[0]}</div>
+      <div class="row">
+        <span class="label">${item.label}</span>
+        <span class="price">RM${item.price}</span>
+      </div>`;
+    btn.addEventListener("click", () => selectItem(item.id));
+    list.appendChild(btn);
+  });
+}
+
+// ---- Select item (Feature 2) ----
+function selectItem(id) {
+  selectedItemId = id;
+  renderList();
+  renderDetail();
+  renderContact();
+}
+
+function renderItemPhoto(item, size) {
+  return `
+    <div class="photo" style="background: ${item.color}; width:${size}px; height:${size}px;">
+      <span>${item.emoji}</span>
+      <small>Photo placeholder</small>
+    </div>`;
+}
+
+function renderDetail() {
+  const item = ITEMS.find(i => i.id === selectedItemId);
+  document.getElementById("detailCard").innerHTML = `
+    ${renderItemPhoto(item, 180)}
+    <div class="info">
+      <div class="brand">${item.brand}</div>
+      <h3>${item.name}</h3>
+      <div class="price">RM${item.price}</div>
+      <p class="desc">${item.desc}</p>
+      <div class="facts">
+        <p><b>Condition:</b> ${item.condition}</p>
+        <p><b>Size:</b> ${item.size}</p>
+        <p><b>Tag:</b> ${item.label}</p>
+      </div>
+    </div>`;
+}
+
+// ---- Contact message (Feature 3) ----
+function buildMessage(item) {
+  return `Hi ${SHOP.name}! 👋
+
+I'm interested in this item from your thrift rack:
+
+• Item: ${item.name} (${item.brand})
+• Size: ${item.size}
+• Price listed: RM${item.price}
+• Condition noted: ${item.condition}
+
+Is it still available? I can drop by your ${SHOP.area} store or arrange postage. Thanks!`;
+}
+
+function renderContact() {
+  const item = ITEMS.find(i => i.id === selectedItemId);
+  const msg = document.getElementById("contactMsg");
+  msg.textContent = buildMessage(item);
+  msg.classList.remove("highlighted");
+  document.getElementById("copyNote").textContent =
+    "About: " + item.brand + " " + item.name + " · Size " + item.size + " · RM" + item.price + " (sample item, not a real listing)";
+}
+
+document.getElementById("copyBtn").addEventListener("click", async () => {
+  const msg = document.getElementById("contactMsg");
+  const text = msg.textContent;
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copyNote").textContent = "Message copied to clipboard ✓ (sample message only)";
+  } catch {
+    const range = document.createRange();
+    range.selectNodeContents(msg);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.getElementById("copyNote").textContent = "Message selected — press Ctrl+C to copy (sample message only)";
+  }
+});
+
+document.getElementById("highlightBtn").addEventListener("click", () => {
+  const msg = document.getElementById("contactMsg");
+  msg.classList.toggle("highlighted");
+});
+
+// ---- Init: app always opens with data on screen ----
+renderFilters();
+renderList();
+renderDetail();
+renderContact();
+</script>
+</body>
+</html>
